@@ -138,7 +138,41 @@ app.get("/catalog/:type/:id.json", (req,res) => {
     }))
   });
 });
+app.get("/meta/:type/:id.json", (req,res) => {
+  const id = req.params.id;
 
+  const match = id.match(/^ott2026-(hindi|telugu|tamil|malayalam|kannada)-(\d+)$/);
+
+  if (!match) {
+    return res.status(404).json({ error:"Not found" });
+  }
+
+  const lang = match[1];
+  const index = Number(match[2]);
+
+  const list = data.filter(x =>
+    x[2].toLowerCase() === lang &&
+    x[1] === req.params.type
+  );
+
+  const item = list[index];
+
+  if (!item) {
+    return res.status(404).json({ error:"Not found" });
+  }
+
+  res.json({
+    meta: {
+      id: id,
+      type: item[1],
+      name: item[0],
+      poster: poster(item[0]),
+      posterShape: "poster",
+      releaseInfo: "2026",
+      description: "2026 " + item[2] + " OTT release. Platform: " + item[3]
+    }
+  });
+});
 app.listen(PORT,"0.0.0.0",() => {
   console.log("Indian OTT 2026 addon running on port " + PORT);
 });
