@@ -1,117 +1,144 @@
 const express = require("express");
 const app = express();
-
 const PORT = process.env.PORT || 7000;
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   next();
 });
 
-const movies = [
-  {
-    id: "tt0111161",
-    type: "movie",
-    name: "The Shawshank Redemption",
-    poster: "https://image.tmdb.org/t/p/w500/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg"
-  },
-  {
-    id: "tt0468569",
-    type: "movie",
-    name: "The Dark Knight",
-    poster: "https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg"
-  }
+const data = [
+  // HINDI
+  ["Gandhari","movie","Hindi","Netflix"],
+  ["The Revolutionaries","series","Hindi","Prime Video"],
+  ["Ghamasaan","movie","Hindi","ZEE5"],
+  ["Don't Be Shy","movie","Hindi","Prime Video"],
+  ["Main Ladega","movie","Hindi","JioHotstar"],
+  ["Ohh My Dog","movie","Hindi","Netflix"],
+  ["Dupahiya Season 2","series","Hindi","Prime Video"],
+  ["Pooja Meri Jaan","movie","Hindi","ZEE5"],
+
+  // TELUGU
+  ["Jagamae Sangeetham","series","Telugu","Prime Video"],
+  ["Romanchakam","movie","Telugu","Netflix"],
+  ["Sardar 2","movie","Telugu","Prime Video"],
+  ["Bethlehem Kudumba Unit","movie","Telugu","JioHotstar"],
+  ["#Love","series","Telugu","Netflix"],
+
+  // TAMIL
+  ["The Court","movie","Tamil","JioHotstar"],
+  ["Sardar 2","movie","Tamil","Prime Video"],
+  ["Romanchakam","movie","Tamil","Netflix"],
+  ["#Love","series","Tamil","Netflix"],
+  ["Bethlehem Kudumba Unit","movie","Tamil","JioHotstar"],
+
+  // MALAYALAM
+  ["Unmadham","movie","Malayalam","SonyLIV"],
+  ["Prince of Mollywood","series","Malayalam","JioHotstar"],
+  ["Bethlehem Kudumba Unit","movie","Malayalam","JioHotstar"],
+  ["Panthadikkaam","series","Malayalam","ZEE5"],
+  ["Romanchakam","movie","Malayalam","Netflix"],
+
+  // KANNADA
+  ["Bigg Boss Kannada Season 13","series","Kannada","JioHotstar"],
+  ["Mother Promise","movie","Kannada","ZEE5"],
+  ["Sardar 2","movie","Kannada","Prime Video"],
+  ["Romanchakam","movie","Kannada","Netflix"],
+  ["Bethlehem Kudumba Unit","movie","Kannada","JioHotstar"]
 ];
 
-const series = [
-  {
-    id: "tt0903747",
-    type: "series",
-    name: "Breaking Bad",
-    poster: "https://image.tmdb.org/t/p/w500/ztkUQFLlC9fJZQY9V5jQZQZQZQZ.jpg"
-  },
-  {
-    id: "tt0944947",
-    type: "series",
-    name: "Game of Thrones",
-    poster: "https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg"
-  }
-];
+const languages = ["Hindi","Telugu","Tamil","Malayalam","Kannada"];
 
-const catalog = [...movies, ...series];
+function poster(name) {
+  return "https://placehold.co/600x900/111/fff?text=" +
+    encodeURIComponent(name);
+}
 
-app.get("/", (req, res) => {
-  res.send("Stremio Catalog Addon is running!");
+app.get("/", (req,res) => {
+  res.send("Indian OTT 2026 Addon is running!");
 });
 
-app.get("/manifest.json", (req, res) => {
+app.get("/manifest.json", (req,res) => {
+
+  const catalogs = [];
+
+  languages.forEach(lang => {
+    const key = lang.toLowerCase();
+
+    catalogs.push({
+      type:"movie",
+      id:key + "_movies_2026",
+      name:lang + " Movies 2026"
+    });
+
+    catalogs.push({
+      type:"series",
+      id:key + "_series_2026",
+      name:lang + " Web Series 2026"
+    });
+  });
+
+  catalogs.push({
+    type:"movie",
+    id:"all_movies_2026",
+    name:"🇮🇳 Indian Movies 2026"
+  });
+
+  catalogs.push({
+    type:"series",
+    id:"all_series_2026",
+    name:"🇮🇳 Indian Web Series 2026"
+  });
+
   res.json({
-    id: "org.gafoor.catalog",
-    version: "1.0.1",
-    name: "My Movie Catalog",
-    description: "Movie and series catalog for Stremio",
-    resources: ["catalog", "meta"],
-    types: ["movie", "series"],
-    catalogs: [
-      {
-        type: "movie",
-        id: "my_movies",
-        name: "My Movies"
-      },
-      {
-        type: "series",
-        id: "my_series",
-        name: "My Series"
-      }
-    ],
-    idPrefixes: ["tt"]
+    id:"org.gafoor.indianott2026",
+    version:"2.0.0",
+    name:"Indian OTT 2026",
+    description:"Hindi, Telugu, Tamil, Malayalam and Kannada OTT catalog",
+    resources:["catalog","meta"],
+    types:["movie","series"],
+    catalogs:catalogs,
+    idPrefixes:["ott2026-"]
   });
 });
 
-app.get("/catalog/:type/:id.json", (req, res) => {
-  let items = [];
+app.get("/catalog/:type/:id.json", (req,res) => {
 
-  if (req.params.type === "movie" && req.params.id === "my_movies") {
-    items = movies;
-  }
+  const type = req.params.type;
+  const id = req.params.id;
 
-  if (req.params.type === "series" && req.params.id === "my_series") {
-    items = series;
+  let list = [];
+
+  if(id === "all_movies_2026" || id === "all_series_2026") {
+    list = data.filter(x => x[1] === type);
+  } else {
+
+    const match = id.match(
+      /^(hindi|telugu|tamil|malayalam|kannada)_(movies|series)_2026$/
+    );
+
+    if(match) {
+      const lang =
+        match[1].charAt(0).toUpperCase() +
+        match[1].slice(1);
+
+      list = data.filter(
+        x => x[1] === type && x[2] === lang
+      );
+    }
   }
 
   res.json({
-    metas: items.map(item => ({
-      id: item.id,
-      type: item.type,
-      name: item.name,
-      poster: item.poster,
-      posterShape: "poster"
+    metas:list.map((x,i) => ({
+      id:"ott2026-" + x[2].toLowerCase() + "-" + i,
+      type:x[1],
+      name:x[0],
+      poster:poster(x[0]),
+      posterShape:"poster"
     }))
   });
 });
 
-app.get("/meta/:type/:id.json", (req, res) => {
-  const item = catalog.find(
-    x => x.id === req.params.id && x.type === req.params.type
-  );
-
-  if (!item) {
-    return res.status(404).json({ error: "Not found" });
-  }
-
-  res.json({
-    meta: {
-      id: item.id,
-      type: item.type,
-      name: item.name,
-      poster: item.poster,
-      posterShape: "poster"
-    }
-  });
-});
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("Stremio addon running on port " + PORT);
+app.listen(PORT,"0.0.0.0",() => {
+  console.log("Indian OTT 2026 addon running on port " + PORT);
 });
