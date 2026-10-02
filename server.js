@@ -162,16 +162,19 @@ app.get("/meta/:type/:id.json", (req,res) => {
   }
 
   res.json({
-    meta: {
-      id: id,
-      type: item[1],
-      name: item[0],
-      poster: poster(item[0]),
-      posterShape: "poster",
-      releaseInfo: "2026",
-      description: "2026 " + item[2] + " OTT release. Platform: " + item[3]
-    }
-  });
+  meta: {
+    id: id,
+    type: item[1],
+    name: item[0],
+    poster: poster(item[0]),
+    posterShape: "poster",
+    releaseInfo: "2026",
+    description:
+      "2026 " + item[2] +
+      " OTT release. Platform: " + item[3] +
+      ". Target quality: 1080p / 4K."
+  }
+});
 });
 app.listen(PORT,"0.0.0.0",() => {
   console.log("Indian OTT 2026 addon running on port " + PORT);
